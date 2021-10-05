@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Text, View, StyleSheet, Button } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
+import * as DocumentPicker from 'expo-document-picker';
+
 
 export default function App() {
   const [hasCameraPermission, setHasCameraPermission] = useState(null);
   const [scanCompleted, setScanCompleted] = useState(false);
   const [barcodeDataType, setBarcodeDataType] = useState('None');
   const [barcodeData, setBarcodeData] = useState('Looking for barcode...');
+  const [inputDocument, setInputDocument] = useState(null);
 
   const requestCameraPermission = () => {
     (async () => {
@@ -14,6 +17,42 @@ export default function App() {
       setHasCameraPermission(status === 'granted');
     })()
   }
+
+  const openDocumentPicker = () => {
+
+    try {
+
+      (async () => {
+        const result = await DocumentPicker.getDocumentAsync({type:"text/csv"})
+
+        if (result.type === 'success') {
+          setInputDocument(result)
+          console.log(
+              result.uri,
+              result.type, // mime type
+              result.name,
+              result.size,
+          )
+        }
+
+        if (result.type === 'cancel') {
+          // user cancelled the document selection
+          console.log(`user cancelled`)
+        }
+
+      })()
+
+    } catch (err) {
+      throw err
+
+      // if (DocumentPicker.isCancel(err)) {
+      //   // User cancelled the picker, exit any dialogs or menus and move on
+      // } else {
+      //   throw err
+      // }
+    }
+  }
+
 
   // Request Permission : Camera
   useEffect( () => {
@@ -37,7 +76,6 @@ export default function App() {
     )
   }
 
-
   if (hasCameraPermission === false) {
     return (
         <View style={styles.container}>
@@ -47,8 +85,10 @@ export default function App() {
     )
   }
 
+
   return (
       <View style={styles.container}>
+        <Button title={"Import Barcode File"} onPress={() => openDocumentPicker()}/>
 
         <View style={styles.barcodewindow}>
           <BarCodeScanner
